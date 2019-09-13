@@ -82,4 +82,7 @@ module.exports = {
   getFilenameFromUrl: function(url) {
     return url.substring(url.lastIndexOf('/') + 1);
   },
+  saveRandomPGEImage: function() { 
+      return this.loadRemoteImage("https://pgewam.lovelytics.info/pge_weather_app/")
+  }
 };
