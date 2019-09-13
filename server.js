@@ -21,7 +21,7 @@ app.use(express.static('public'));
 function getPic(id) {
     const picUrl = "https://data.alertwildfire.org/api/firecams/v0/currentimage?name=" + id
     $.ajax({
-        url: 'pic3.php', //This is the current doc
+        url: 'https://pgewam.lovelytics.info/pge_weather_app/pic3.php', //This is the current doc
         type: "POST",
         dataType: "json",
         data: ({
@@ -30,49 +30,19 @@ function getPic(id) {
     }).done(function (data) {
         // console.log(data.data4)
         let imgSRC = "data:image/png;base64," + data.data4;
-        $("#curPic").attr('src', imgSRC);
-        $("#modalPic").attr('src', imgSRC);
+        return imgSRC
     }).fail(function (jqXHR, textStatus) {
         console.log(textStatus)
     });
+};
+
+function loadRandomCamera() {
+  // loads a random camera and construct a tweet 
+  // object info 
+  const cameras = require('./cameras.json')
+  return helpers.randomFromArray(cameras)
 }
 
-
-app.all(`/${process.env.BOT_ENDPOINT}`, function(req, res) {
-  /* See EXAMPLES.js for some example code you can use. */
-  /* Example 2: Pick a random image from the assets folder and tweet it. */
-
-  helpers.loadImageAssets(function(err, asset_urls){
-    if (err){
-      console.log(err);     
-      res.sendStatus(500);
-    }
-    else{
-      helpers.loadRemoteImage(helpers.randomFromArray(asset_urls), function(err, img_data){
-        if (err){
-          console.log(err);     
-          res.sendStatus(500);
-        }
-        else{
-          twitter.postImage('Hello 👋', img_data, function(err, data){
-            if (err){
-              console.log(err);     
-              res.sendStatus(500);
-            }
-            else{
-              res.sendStatus(200);
-            }            
-          });
-        }
-      });
-    }
-  });
-
-});
-
-var listener = app.listen(process.env.PORT, function(){
-  console.log('your bot is running on port ' + listener.address().port);
-});
 
 /* You can use uptimerobot.com or a similar site to hit your /BOT_ENDPOINT to wake up your app and make your Twitter bot tweet. */
 
@@ -80,32 +50,7 @@ app.all(`/${process.env.BOT_ENDPOINT}`, function(req, res) {
   /* See EXAMPLES.js for some example code you can use. */
   /* Example 2: Pick a random image from the assets folder and tweet it. */
 
-  helpers.loadImageAssets(function(err, asset_urls){
-    if (err){
-      console.log(err);     
-      res.sendStatus(500);
-    }
-    else{
-      helpers.loadRemoteImage(helpers.randomFromArray(asset_urls), function(err, img_data){
-        if (err){
-          console.log(err);     
-          res.sendStatus(500);
-        }
-        else{
-          twitter.postImage('Hello 👋', img_data, function(err, data){
-            if (err){
-              console.log(err);     
-              res.sendStatus(500);
-            }
-            else{
-              res.sendStatus(200);
-            }            
-          });
-        }
-      });
-    }
-  });
-
+  console.log("hello world");
 });
 
 var listener = app.listen(process.env.PORT, function(){
