@@ -5,6 +5,7 @@ var path = require('path'),
 var helpers = require(__dirname + '/helpers.js'),
     twitter = require(__dirname + '/twitter.js'),
     res = null;
+var fs = require('fs');
 
 app.use(express.static('public'));
 /* Setting things up. */
@@ -39,8 +40,18 @@ function getPic(id) {
 function loadRandomCamera() {
   // loads a random camera and construct a tweet 
   // object info 
-  const cameras = require('./cameras.json')
-  return helpers.randomFromArray(cameras)
+  fs.readFile('./cameras.json', 'utf8', (err, fileContents) => {
+  if (err) {
+    console.error(err)
+    return
+  }
+  try {
+    const data = JSON.parse(fileContents)
+    return helpers.randomFromArray(data)
+  } catch(err) {
+    console.error(err)
+  }
+})
 }
 
 
@@ -50,7 +61,7 @@ app.all(`/${process.env.BOT_ENDPOINT}`, function(req, res) {
   /* See EXAMPLES.js for some example code you can use. */
   /* Example 2: Pick a random image from the assets folder and tweet it. */
 
-  console.log("hello world");
+  return "hello world";
 });
 
 var listener = app.listen(process.env.PORT, function(){
