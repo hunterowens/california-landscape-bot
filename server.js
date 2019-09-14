@@ -6,7 +6,7 @@ var helpers = require(__dirname + '/helpers.js'),
     twitter = require(__dirname + '/twitter.js'),
     res = null;
 var fs = require('fs');
-
+const https = require('https');
 app.use(express.static('public'));
 /* Setting things up. */
 var path = require('path'),
@@ -19,8 +19,25 @@ var helpers = require(__dirname + '/helpers.js'),
 app.use(express.static('public'));
 
 /* You can use uptimerobot.com or a similar site to hit your /BOT_ENDPOINT to wake up your app and make your Twitter bot tweet. */
-function getPic(id) {
-    const picUrl = "https://data.alertwildfire.org/api/firecams/v0/currentimage?name=" + id
+function getPic(url) {
+    const picUrl = url
+    
+    https.post('https://pgewam.lovelytics.info/pge_weather_app/pic3.php', (resp) => {
+      let data = '';
+
+      // A chunk of data has been recieved.
+      resp.on('data', (chunk) => {
+        data += chunk;
+      });
+
+      // The whole response has been received. Print out the result.
+      resp.on('end', () => {
+        console.log(JSON.parse(data).explanation);
+      });
+
+      }).on("error", (err) => {
+        console.log("Error: " + err.message);
+    });
     $.ajax({
         url: 'https://pgewam.lovelytics.info/pge_weather_app/pic3.php', //This is the current doc
         type: "POST",
@@ -47,12 +64,20 @@ function loadRandomCamera() {
   }
   try {
     const data = JSON.parse(fileContents)
-    return helpers.randomFromArray(data)
+    const site = helpers.randomFromArray(data);
+    const url = site['image']['url']
+    const name = site['description']
+    const lat = site['site']['latitude']
+    const long = site['site']['longitude']
+    const county = site['site']['county']
+    const img = getPic(site['image']['url'])
+    console.log(img)
+    return helpers.randomFromArray(data);
   } catch(err) {
     console.error(err)
   }
 })
-}
+};
 
 
 /* You can use uptimerobot.com or a similar site to hit your /BOT_ENDPOINT to wake up your app and make your Twitter bot tweet. */
@@ -60,8 +85,7 @@ function loadRandomCamera() {
 app.all(`/${process.env.BOT_ENDPOINT}`, function(req, res) {
   /* See EXAMPLES.js for some example code you can use. */
   /* Example 2: Pick a random image from the assets folder and tweet it. */
-
-  return "hello world";
+  console.log(loadRandomCamera());
 });
 
 var listener = app.listen(process.env.PORT, function(){
