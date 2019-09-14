@@ -94,7 +94,16 @@ app.all(`/${process.env.BOT_ENDPOINT}`, function(req, res) {
       }
       else if (httpResponse) {  
         console.log("httpResponseHappened")
-        let imgSRC = 'data:image/png;base64,' + JSON.parse(body)['data4'];
+        let imgSRC = JSON.parse(body)['data4'];
+        twitter.postImage(name + " "+ county + " located at " + lat + "," + long, imgSRC, function(err, data){
+          if (err){
+            console.log(err);     
+            res.sendStatus(500);
+          }
+          else{
+            res.sendStatus(200);
+          }            
+        });
         console.log('data:image/png;base64,' + JSON.parse(body)['data4']);
       }
     });
