@@ -6,7 +6,8 @@ var helpers = require(__dirname + '/helpers.js'),
     twitter = require(__dirname + '/twitter.js'),
     res = null;
 var fs = require('fs');
-const https = require('https');
+const request = require('request');
+
 app.use(express.static('public'));
 /* Setting things up. */
 var path = require('path'),
@@ -21,36 +22,14 @@ app.use(express.static('public'));
 /* You can use uptimerobot.com or a similar site to hit your /BOT_ENDPOINT to wake up your app and make your Twitter bot tweet. */
 function getPic(url) {
     const picUrl = url
-    
-    https.post('https://pgewam.lovelytics.info/pge_weather_app/pic3.php', (resp) => {
-      let data = '';
-
-      // A chunk of data has been recieved.
-      resp.on('data', (chunk) => {
-        data += chunk;
-      });
-
-      // The whole response has been received. Print out the result.
-      resp.on('end', () => {
-        console.log(JSON.parse(data).explanation);
-      });
-
-      }).on("error", (err) => {
-        console.log("Error: " + err.message);
-    });
-    $.ajax({
-        url: 'https://pgewam.lovelytics.info/pge_weather_app/pic3.php', //This is the current doc
-        type: "POST",
-        dataType: "json",
-        data: ({
-            uri: picUrl
-        }),
-    }).done(function (data) {
-        // console.log(data.data4)
-        let imgSRC = "data:image/png;base64," + data.data4;
-        return imgSRC
-    }).fail(function (jqXHR, textStatus) {
-        console.log(textStatus)
+    request.post('https://pgewam.lovelytics.info/pge_weather_app/pic3.php', {form:{uri:picUrl}} , function optionalCallback(err, httpResponse, body) {
+      if (err) {
+        return console.error('upload failed:', err);
+      }
+      else {   
+      let imgSRC = 'data:image/png;base64,' + JSON.parse(body)['data4'];
+      return imgSRC;
+      }
     });
 };
 
