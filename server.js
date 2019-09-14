@@ -20,15 +20,17 @@ var helpers = require(__dirname + '/helpers.js'),
 app.use(express.static('public'));
 
 /* You can use uptimerobot.com or a similar site to hit your /BOT_ENDPOINT to wake up your app and make your Twitter bot tweet. */
-function getPic(url) {
-    const picUrl = url
+function getPic(url, callback) {
+  const picUrl = url
     request.post('https://pgewam.lovelytics.info/pge_weather_app/pic3.php', {form:{uri:picUrl}} , function optionalCallback(err, httpResponse, body) {
       if (err) {
         return console.error('upload failed:', err);
       }
-      else {   
-      let imgSRC = 'data:image/png;base64,' + JSON.parse(body)['data4'];
-      return imgSRC;
+      else if (httpResponse) {  
+        console.log("httpResponseHappened")
+        let imgSRC = 'data:image/png;base64,' + JSON.parse(body)['data4'];
+        return imgSRC;
+        callback();
       }
     });
 };
@@ -50,8 +52,7 @@ function loadRandomCamera() {
     const long = site['site']['longitude']
     const county = site['site']['county']
     const img = getPic(site['image']['url'])
-    console.log(img)
-    return helpers.randomFromArray(data);
+    return img;
   } catch(err) {
     console.error(err)
   }
@@ -64,7 +65,7 @@ function loadRandomCamera() {
 app.all(`/${process.env.BOT_ENDPOINT}`, function(req, res) {
   /* See EXAMPLES.js for some example code you can use. */
   /* Example 2: Pick a random image from the assets folder and tweet it. */
-  console.log(loadRandomCamera());
+  console.log("camera img:" + loadRandomCamera());
 });
 
 var listener = app.listen(process.env.PORT, function(){
