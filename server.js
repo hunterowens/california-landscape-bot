@@ -87,6 +87,7 @@ app.all(`/${process.env.BOT_ENDPOINT}`, function(req, res) {
     const name = site['description']
     const lat = site['site']['latitude']
     const long = site['site']['longitude']
+    const alt = site['site']['altitude']
     const county = site['site']['county']
     request.post('https://pgewam.lovelytics.info/pge_weather_app/pic3.php', {form:{uri:url}} , function optionalCallback(err, httpResponse, body) {
       if (err) {
@@ -95,7 +96,7 @@ app.all(`/${process.env.BOT_ENDPOINT}`, function(req, res) {
       else if (httpResponse) {  
         console.log("httpResponseHappened")
         let imgSRC = JSON.parse(body)['data4'];
-        twitter.postImage(name + " "+ county + " located at " + lat + "," + long, imgSRC, function(err, data){
+        twitter.postImage(name + " "+ county + " located at " + lat + "," + long + ". Altitude: " + alt + "m", imgSRC, function(err, data){
           if (err){
             console.log(err);     
             res.sendStatus(500);
