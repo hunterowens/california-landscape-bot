@@ -33,7 +33,7 @@ function getPic(url) {
       if (err) {
         return console.error("upload failed:", err);
       } else if (httpResponse) {
-        console.log("httpResponseHappened");
+        console.log("got image " + picUrl);
         let imgSRC = "data:image/png;base64," + JSON.parse(body)["data4"];
         return "data:image/png;base64," + JSON.parse(body)["data4"];
       }
@@ -91,18 +91,7 @@ app.all(`/${process.env.BOT_ENDPOINT}`, function(req, res) {
           let imgSRC = JSON.parse(body)["data4"];
 
           twitter.postImage(
-            name +
-              "\n" +
-              county +
-              " County, " +
-              state +
-              " (" +
-              lat +
-              ", " +
-              long +
-              ")\n" +
-              Math.round(alt) +
-              " feet",
+            generateTweetText({ name, county, state, lat, long, alt }),
             imgSRC,
             function(err, data) {
               if (err) {
@@ -163,18 +152,7 @@ app.all(`/${process.env.GIF_ENDPOINT}`, (req, res) => {
           });
 
           twitter.postImage(
-            name +
-              "\n" +
-              county +
-              " County, " +
-              state +
-              " (" +
-              lat +
-              ", " +
-              long +
-              ")\n" +
-              Math.round(alt) +
-              " feet",
+            generateTweetText({ name, county, state, lat, long, alt }),
             imgSRC.toString("base64"),
             function(err, data) {
               if (err) {
@@ -236,9 +214,7 @@ async function writeGif(frames, callback) {
       );
 
       try {
-        // Draw cat with lime helmet
         let image = await loadImage("frames/" + i + ".jpg");
-        console.log(i);
         ctx.drawImage(image, 0, 0, 480, 270);
         encoder.addFrame(ctx);
       } catch (e) {
@@ -255,4 +231,21 @@ async function writeGif(frames, callback) {
     console.log("finished GIF");
     callback();
   });
+}
+
+function generateTweetText({ name, county, state, lat, long, alt }) {
+  return (
+    name +
+    "\n" +
+    county +
+    " County, " +
+    state +
+    "\n" +
+    Math.round(alt) +
+    " ft (" +
+    lat +
+    ", " +
+    long +
+    ")"
+  );
 }
