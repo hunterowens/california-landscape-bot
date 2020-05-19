@@ -65,111 +65,160 @@ function getRandomCamera(callback) {
         "https://data.alertwildfire.org/api/firecams/v0/currentimage?name=" +
         id;
 
+      let network = site.properties.network;
+      if (network === "laorange") network = "orangecoca";
+
+      const camera_url =
+        "http://www.alertwildfire.org/" + network + "/index.html?camera=" + id;
+
       const name = site.properties.name;
       const alt = site.geometry.coordinates[2] * 1000 * 3.28084;
       const lat = (+site.geometry.coordinates[1]).toFixed(4);
       const long = (+site.geometry.coordinates[0]).toFixed(4);
+      const azimuth = +site.properties.az_current;
 
       const county = site.properties.county;
       const state = site.properties.state;
 
-      callback({ name, id, url, alt, lat, long, county, state });
+      callback({
+        name,
+        id,
+        url,
+        alt,
+        lat,
+        long,
+        county,
+        state,
+        azimuth,
+        camera_url
+      });
     }
   );
 }
 /* You can use uptimerobot.com or a similar site to hit your /BOT_ENDPOINT to wake up your app and make your Twitter bot tweet. */
 
-app.all(`/${process.env.BOT_ENDPOINT}`, function(req, res) {
-  getRandomCamera(({ name, county, state, lat, long, alt, url }) => {
-    request.post(
-      "https://pgewam.lovelytics.info/pge_weather_app/pic3.php",
-      { form: { uri: url } },
-      function optionalCallback(err, httpResponse, body) {
-        if (err) {
-          return console.error("upload failed:", err);
-        } else if (httpResponse) {
-          let imgSRC = JSON.parse(body)["data4"];
+app.all(`/${process.env.BOT_ENDPOINT}`, function (req, res) {
+  getRandomCamera(
+    ({ name, county, state, lat, long, alt, url, azimuth, camera_url }) => {
+      request.post(
+        "https://pgewam.lovelytics.info/pge_weather_app/pic3.php",
+        { form: { uri: url } },
+        function optionalCallback(err, httpResponse, body) {
+          if (err) {
+            return console.error("upload failed:", err);
+          } else if (httpResponse) {
+            let imgSRC = JSON.parse(body)["data4"];
 
-          twitter.postImage(
-            generateTweetText({ name, county, state, lat, long, alt }),
-            imgSRC,
-            function(err, data) {
-              if (err) {
-                console.log(err);
-                res.sendStatus(500);
-              } else {
-                res.sendStatus(200);
+            twitter.postImage(
+              generateTweetText({
+                name,
+                county,
+                state,
+                lat,
+                long,
+                alt,
+                azimuth,
+                camera_url
+              }),
+              imgSRC,
+              function (err, data) {
+                if (err) {
+                  console.log(err);
+                  res.sendStatus(500);
+                } else {
+                  res.sendStatus(200);
+                }
               }
-            }
-          );
+            );
+          }
         }
-      }
-    );
-    return getPic(url);
-  });
+      );
+      return getPic(url);
+    }
+  );
 });
 
 app.all(`/${process.env.GIF_ENDPOINT}`, (req, res) => {
-  getRandomCamera(({ id, name, county, state, lat, long, alt, url }) => {
-    const length = helpers.randomFromArray(["15m", "1h", "3h", "6h", "12h"]);
-    const frames =
-      "http://ts1.alertwildfire.org/cameras/" +
-      id +
-      "/images:timelapse?preset=" +
-      length +
-      "&nocache=" +
-      Date.now();
+  getRandomCamera(
+    ({ id, name, county, state, lat, long, alt, url, azimuth, camera_url }) => {
+      const length = helpers.randomFromArray(["15m", "1h", "3h", "6h", "12h"]);
+      const frames =
+        "http://ts1.alertwildfire.org/text/timelapse?source=" +
+        id.toLowerCase() +
+        "&preset=" +
+        length +
+        "&nocache=" +
+        Date.now();
 
-    request.get(
-      {
-        url: frames,
-        encoding: null,
-        headers: {
-          Accept:
-            "image/png,image/svg+xml,image/*;q=0.8,video/*;q=0.8,*/*;q=0.5",
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
-          Referer:
-            "http://www.alertwildfire.org/tahoe/index.html?camera=" +
-            id +
-            "&v=518dd6a"
-        }
-      },
-      (err, fileContents) => {
-        if (err) {
-          console.error(err);
-        }
+      request.get(
+        {
+          url: frames,
+          encoding: null,
+          headers: {
+            Accept:
+              "image/png,image/svg+xml,image/*;q=0.8,video/*;q=0.8,*/*;q=0.5",
+            "User-Agent":
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
+            Referer:
+              "http://www.alertwildfire.org/tahoe/index.html?camera=" +
+              id +
+              "&v=518dd6a"
+          }
+        },
+        (err, fileContents) => {
+          if (err) {
+            console.error(err);
+          }
 
-        let frames = bsplit(
-          fileContents.body,
-          new Buffer("--frame\r\nContent-Type: image/jpeg\r\n\r\n"),
-          true
-        ).slice(1);
+          let frames = bsplit(
+            fileContents.body,
+            Buffer.from("FFD8FF", "hex"),
+            true
+          ).slice(1);
 
-        writeGif(frames, () => {
-          const imgSRC = fs.readFileSync("./tmp.gif", {
-            encoding: null
-          });
+          frames = frames
+            .map(f => {
+              let buf = Buffer.concat([Buffer.from("FFD8FF", "hex"), f]);
+              let bufsplit = bsplit(buf, Buffer.from("FFD9", "hex"));
+              if (bufsplit.length < 2) return false;
+              return Buffer.concat([bufsplit[0], Buffer.from("FFD9", "hex")]);
+            })
+            .filter(f => f !== false);
 
-          twitter.postImage(
-            generateTweetText({ name, county, state, lat, long, alt }),
-            imgSRC.toString("base64"),
-            function(err, data) {
-              if (err) {
-                console.log(err);
-                res.sendStatus(500);
-              } else {
-                res.sendStatus(200);
+          writeGif(frames, () => {
+            const imgSRC = fs.readFileSync("./tmp.gif", {
+              encoding: null
+            });
+
+            twitter.postImage(
+              generateTweetText({
+                name,
+                county,
+                state,
+                lat,
+                long,
+                alt,
+                azimuth,
+                camera_url
+              }),
+              imgSRC.toString("base64"),
+              function (err, data) {
+                if (err) {
+                  console.log(err);
+                  res.sendStatus(500);
+                } else {
+                  res.sendStatus(200);
+                }
               }
-            }
-          );
-        });
-      }
-    );
-  });
+            );
+          });
+        }
+      );
+    }
+  );
 });
 
-var listener = app.listen(process.env.PORT, function() {
+var listener = app.listen(process.env.PORT, function () {
   console.log("your bot is running on port " + listener.address().port);
 });
 
@@ -227,25 +276,54 @@ async function writeGif(frames, callback) {
 
   encoder.finish();
 
-  stream.on("finish", function() {
+  stream.on("finish", function () {
     console.log("finished GIF");
     callback();
   });
 }
 
-function generateTweetText({ name, county, state, lat, long, alt }) {
+function generateTweetText({
+  name,
+  county,
+  state,
+  lat,
+  long,
+  alt,
+  azimuth,
+  camera_url
+}) {
+  azimuth = -azimuth;
+
+  let directions = [
+    "north",
+    "northwest",
+    "west",
+    "southwest",
+    "south",
+    "southeast",
+    "east",
+    "northeast"
+  ];
+  let direction =
+    directions[
+      Math.round(((azimuth %= 360) < 0 ? azimuth + 360 : azimuth) / 45) % 8
+    ];
+
   return (
     name +
-    "\n" +
+    ", " +
     county +
     " County, " +
     state +
     "\n" +
-    Math.round(alt) +
-    " ft (" +
     lat +
     ", " +
     long +
-    ")"
+    "\n" +
+    Math.round(alt) +
+    " ft above sea level, facing " +
+    direction +
+    "\n" +
+    camera_url
   );
 }
