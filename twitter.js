@@ -1,8 +1,8 @@
+require('dotenv').config();
+
 var config = {
       twitter: {
         username: process.env.BOT_USERNAME,
-     /* Be sure to update the .env file with your API keys.
-        See how to get them: https://botwiki.org/tutorials/how-to-create-a-twitter-app */
         consumer_key: process.env.CONSUMER_KEY,
         consumer_secret: process.env.CONSUMER_SECRET,
         access_token: process.env.ACCESS_TOKEN,
@@ -11,6 +11,9 @@ var config = {
     },
     Twit = require('twit'),
     T = new Twit(config.twitter);
+
+
+// T.post('statuses/destroy/:id', {id: '1397893194663137283'})
 
 module.exports = {
   tweet: function(text, cb){
@@ -48,7 +51,38 @@ module.exports = {
         });
       }
     });
-  },  
+  },
+  postMediaChunked: function(text, media_filename, cb) {
+    T.postMediaChunked({file_path: media_filename}, function(err, data, response) {
+      if (err){
+        console.log('MEDIA UPLOAD ERROR:\n', err);
+        if (cb){
+          cb(err);
+        }
+      }
+      else{
+        console.log('tweeting the image...');
+        T.post('statuses/update', {
+          status: text,
+          media_ids: new Array(data.media_id_string)
+        },
+        function(err, data, response) {
+          if (err){
+            console.log('TWEET ERROR:\n', err);
+            if (cb){
+              cb(err);
+            }
+          }
+          else{
+            console.log('tweeted');
+            if (cb){
+              cb(null);
+            }
+          }
+        });
+      }
+    })
+  },
   updateProfileImage: function(image_base64, cb) {
     console.log('updating profile image...');
     T.post('account/update_profile_image', {
