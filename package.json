@@ -9,24 +9,15 @@
 	"dependencies": {
 		"buffer-split": "^1.0.0",
 		"canvas": "^2.6.1",
-		"express": "^4.14.0",
+		"dotenv": "^8.2.0",
 		"gifencoder": "^2.0.1",
-		"jpg-stream": "^1.1.2",
-		"twit": "^2.1.0"
+		"twit": "^2.1.0",
+		"yargs": "^17.0.1"
 	},
 	"engines": {
-		"node": "8.x"
+		"node": "12.x"
 	},
 	"repository": {
 		"url": ""
-	},
-	"keywords": [
-		"node",
-		"glitch",
-		"gomix",
-		"hyperdev",
-		"twitter",
-		"twitterbot",
-		"bot"
-	]
+	}
 }
