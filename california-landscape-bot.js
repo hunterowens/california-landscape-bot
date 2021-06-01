@@ -31,10 +31,12 @@ function getPic(url) {
   );
 }
 
-function getRandomCamera(callback) {
+function getRandomCamera(callback, options) {
+  if (!options) options = {};
+
   request.get(
     {
-      url: "http://s3-us-west-2.amazonaws.com/alertwildfire-data-public/all_cameras.json",
+      url: "http://s3-us-west-2.amazonaws.com/alertwildfire-data-public/all_cameras-v2.json",
       headers: {
         Origin: "http://www.alertwildfire.org",
         Host: "s3-us-west-2.amazonaws.com",
@@ -48,7 +50,13 @@ function getRandomCamera(callback) {
       }
 
       const data = JSON.parse(fileContents.body);
-      let site = helpers.randomFromArray(data.features);
+      let features = data.features;
+
+      if (options.gif) {
+        features = features.filter(f => f.properties.is_patrol_mode == 0);
+      }
+
+      let site = helpers.randomFromArray(features);
 
       if (argv.site) {
         let sites = data.features.filter(
@@ -105,7 +113,7 @@ async function writeGif(frames, callback) {
   let stream = encoder.createReadStream().pipe(fs.createWriteStream("tmp.gif"));
 
   encoder.setRepeat(0); // 0 for repeat, -1 for no-repeat
-  encoder.setDelay(55); // frame delay in ms
+  encoder.setDelay(60); // frame delay in ms
   encoder.setQuality(100); // image quality. 10 is default. Higher is lower quality.
   encoder.start();
 
@@ -289,7 +297,8 @@ if (argv.gif) {
           });
         }
       );
-    }
+    },
+    { gif: true }
   );
 } else {
   getRandomCamera(
