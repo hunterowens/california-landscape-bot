@@ -117,7 +117,7 @@ async function writeGif(frames, callback) {
   encoder.setQuality(100); // image quality. 10 is default. Higher is lower quality.
   encoder.start();
 
-  let maxFrames = 160;
+  let maxFrames = 150;
   let skip = Math.ceil((frames.length - 0) / maxFrames);
   if (skip < 1) skip = 1;
   let start = 0;
