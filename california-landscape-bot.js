@@ -178,38 +178,21 @@ function generateTweetText({
   azimuth,
   camera_url,
 }) {
-  azimuth = -azimuth;
-
-  let directions = [
-    "north",
-    "northwest",
-    "west",
-    "southwest",
-    "south",
-    "southeast",
-    "east",
-    "northeast",
-  ];
-  let direction =
-    directions[
-      Math.round(((azimuth %= 360) < 0 ? azimuth + 360 : azimuth) / 45) % 8
-    ];
-
   return (
     name +
     ", " +
     county +
     " County, " +
     state +
-    "\n" +
+    "\n\u{1F5FA}" + 
     lat +
     ", " +
     long +
-    "\n" +
+    " \u{1F9ED}" +
+    Math.round(azimuth) + 
+    "\u{00B0} \u{26F0}" +
     Math.round(alt) +
-    " ft above sea level, facing " +
-    direction +
-    "\n" +
+    " ft\n" +
     camera_url
   );
 }
