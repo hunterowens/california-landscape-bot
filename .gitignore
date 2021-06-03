@@ -2,4 +2,4 @@ temp.*
 tmp.gif
 frames/
 node_modules/
-
+.env
