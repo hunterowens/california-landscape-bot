@@ -17,3 +17,6 @@ ACCESS_TOKEN_SECRET=
 * `node california-landscape-bot.js --gif` - tweet a random GIF
 * `node california-landscape-bot.js --site=Axis-Vollmer` - tweet a still image from a particular site
 * `node california-landscape-bot.js --gif --duration=6h --mode=all` - tweet a GIF with a specific duration (15m, 1h, 3h, 6h, 12h) and mode ("all" or "smooth")
+
+### Cron Usage
+`40 * * * * source $HOME/.profile; cd $HOME/california-landscape-bot/; node california-landscape-bot.js --gif >> ~/california-landscape-bot.log 2>&1`
